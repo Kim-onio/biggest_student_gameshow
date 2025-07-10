@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<!-- saved from url=(0030)http://192.168.2.7:3000/admin/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Show Admin</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      text-align: center;
+    }
+    h1 {
+      margin-top: 20px;
+    }
+    #roundInfo {
+      margin: 10px 0;
+      font-size: 1.2em;
+    }
+    .player-scores {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 20px 0;
+    }
+    .player-box {
+      border: 2px solid white;
+      padding: 10px;
+      width: 200px;
+    }
+    .controls {
+      margin-top: 30px;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+    }
+    .responses {
+      margin-top: 30px;
+    }
+    .response-row {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 10px 0;
+    }
+    .response-cell {
+      background: #222;
+      padding: 10px;
+      min-width: 150px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Admin Control Panel</h1>
+  
+
+  
+
+  <div class="controls">
+    <button id="startRound">Start Round</button>
+    <button id="nextQuestion" disabled="">Next Question</button>
+    <button id="startTimer" disabled="">Start Timer</button>
+  </div>
+
+  <div class="responses">
+    <h2>Responses</h2>
+    <div class="response-row">
+      <div class="response-cell" id="response1">Player 1: -</div>
+      <div class="response-cell" id="response2">Player 2: -</div>
+      <div class="response-cell" id="response3">Player 3: -</div>
+    </div>
+    <div class="response-row">
+      <div class="response-cell" id="time1">Time: -</div>
+      <div class="response-cell" id="time2">Time: -</div>
+      <div class="response-cell" id="time3">Time: -</div>
+    </div>
+  </div>
+
+  <script src="./index_files/socket.io.js.download"></script>
+  <script>
+    const socket = io();
+
+    const roundEl = document.getElementById("round");
+    const modeEl = document.getElementById("mode");
+
+    const p1Score = document.getElementById("p1Score");
+    const p2Score = document.getElementById("p2Score");
+    const p3Score = document.getElementById("p3Score");
+
+    const response1 = document.getElementById("response1");
+    const response2 = document.getElementById("response2");
+    const response3 = document.getElementById("response3");
+
+    const time1 = document.getElementById("time1");
+    const time2 = document.getElementById("time2");
+    const time3 = document.getElementById("time3");
+
+    const startRoundBtn = document.getElementById("startRound");
+    const nextQuestionBtn = document.getElementById("nextQuestion");
+    const startTimerBtn = document.getElementById("startTimer");
+
+    startRoundBtn.addEventListener("click", () => {
+      socket.emit("adminStartRound");
+    });
+
+    nextQuestionBtn.addEventListener("click", () => {
+      socket.emit("adminNextQuestion");
+    });
+
+    startTimerBtn.addEventListener("click", () => {
+      socket.emit("adminStartTimer");
+    });
+
+    // Incoming data
+    socket.on("updateRoundInfo", ({ round, mode }) => {
+      roundEl.textContent = round;
+      modeEl.textContent = mode || "-";
+    });
+
+    socket.on("updateScores", (scores) => {
+      p1Score.textContent = scores[0];
+      p2Score.textContent = scores[1];
+      p3Score.textContent = scores[2];
+    });
+
+    socket.on("updateResponses", ({ responses, times }) => {
+      response1.textContent = "Player 1: " + (responses[0] || "-");
+      response2.textContent = "Player 2: " + (responses[1] || "-");
+      response3.textContent = "Player 3: " + (responses[2] || "-");
+
+      time1.textContent = "Time: " + (times[0] || "-");
+      time2.textContent = "Time: " + (times[1] || "-");
+      time3.textContent = "Time: " + (times[2] || "-");
+    });
+
+    socket.on("adminControls", ({ canStartTimer, canNextQuestion }) => {
+      startTimerBtn.disabled = !canStartTimer;
+      nextQuestionBtn.disabled = !canNextQuestion;
+    });
+  </script>
+
+
+</body></html>

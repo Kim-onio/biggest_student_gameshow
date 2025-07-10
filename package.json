@@ -1,0 +1,14 @@
+{
+  "name": "game-show-app",
+  "version": "1.0.0",
+  "description": "Multi-round game show app for Wi-Fi play",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1",
+    "xlsx": "^0.18.5"
+  }
+}

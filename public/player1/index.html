@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Game Show - Player</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #111;
+      color: #fff;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #question {
+      font-size: 24px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .option {
+      padding: 15px 30px;
+      margin: 10px;
+      background: #444;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      text-align: center;
+      transition: background 0.3s;
+    }
+    .option:hover {
+      background: #666;
+    }
+    .disabled {
+      background: #222 !important;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+    #timer {
+      font-size: 32px;
+      margin: 20px;
+    }
+    #score, #playerName {
+      font-size: 18px;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="playerName">Player 1</div>
+  <div id="timer">Timer: --</div>
+  <div id="question">Waiting for question...</div>
+
+  <div id="options">
+    <div class="option" id="optionA">A</div>
+    <div class="option" id="optionB">B</div>
+    <div class="option" id="optionC">C</div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const playerIndex = 0; // Change this to 1 for player2, 2 for player3
+
+    const scoreEl = document.getElementById('score');
+    const questionEl = document.getElementById('question');
+    const timerEl = document.getElementById('timer');
+    const options = {
+      A: document.getElementById('optionA'),
+      B: document.getElementById('optionB'),
+      C: document.getElementById('optionC')
+    };
+
+    let timer = null;
+    let startTime = null;
+
+    socket.on('updateScores', (scores) => {
+      scoreEl.innerText = `Score: ${scores[playerIndex]}`;
+    });
+
+    socket.on('startQuestion', (question) => {
+      questionEl.innerText = question.Question;
+      options.A.innerText = `A: ${question.A}`;
+      options.B.innerText = `B: ${question.B}`;
+      options.C.innerText = `C: ${question.C}`;
+      enableOptions();
+
+      // Start Timer
+      let countdown = 20;
+      timerEl.innerText = `Timer: ${countdown}`;
+      startTime = Date.now();
+
+      if (timer) clearInterval(timer);
+      timer = setInterval(() => {
+        countdown--;
+        timerEl.innerText = `Timer: ${countdown}`;
+        if (countdown <= 0) {
+          clearInterval(timer);
+          disableOptions();
+        }
+      }, 1000);
+    });
+
+    function sendAnswer(option) {
+      const elapsed = Math.round((Date.now() - startTime) / 1000);
+      socket.emit('playerAnswer', {
+        playerIndex,
+        answer: option,
+        time: elapsed
+      });
+      disableOptions();
+      clearInterval(timer);
+    }
+
+    function enableOptions() {
+      for (let key in options) {
+        options[key].classList.remove('disabled');
+        options[key].onclick = () => sendAnswer(key);
+      }
+    }
+
+    function disableOptions() {
+      for (let key in options) {
+        options[key].classList.add('disabled');
+        options[key].onclick = null;
+      }
+    }
+
+    disableOptions();
+  </script>
+</body>
+</html>
